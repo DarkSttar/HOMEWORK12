@@ -1,0 +1,271 @@
+# Метод Find Переписаний, тепер він шукає не тільки по іменні а по збігу в імені номері телефону або даті дня народження
+# Метод load_addressbook запускається при ініціалізації екземпляру класу якщо json файл не пустий він загрузить всі контакти 
+# Метод save_contact(self,record): виконається коли в адрессну книгу буде добавляно новий контакт my_address_book.add_record(john) та обновить json файл
+# Метод delete_contact(self,name): виконаэться коли з адрессної книги буде видаляний контакт my_address_book.delete('Nazar') та обновить json файл
+# назва файлу прописана в классі AddressBook self.file_name = 'AddressBook.json'
+# в терміналі всі дії з json файлом прокоментовані зеленим кольором
+
+
+
+
+from collections import UserDict
+from colorama import init
+from datetime import datetime,date
+import json
+init()
+
+GREEN = "\033[92m"
+RESET = "\033[0m"
+
+    
+
+
+class Field:
+    def __init__(self, value = None):
+        self._value = value
+    @property
+    def value(self):
+        return self._value
+   
+    @value.setter
+    def value(self,value):
+        self._value = value
+
+    def __str__(self):
+        return str(self.value)
+
+class Name(Field):
+    def __init__(self, value):
+        super().__init__(value)
+    
+    def __str__(self):
+        return super().__str__()
+    
+class Phone(Field):
+    def __init__(self, value):
+        super().__init__(value)
+        
+        if len(str(value)) == 10 and str(value).isdigit():
+            self._value = value
+            
+        else:
+           
+            raise ValueError('Invalid phone number')
+    
+        
+    
+    @property
+    def value(self):
+        return super().value
+    @value.setter
+    def value(self,value):
+        if len(str(value)) == 10 and str(value).isdigit():
+            self._value = value
+        else:
+            raise ValueError('Invalid phone number')
+    
+    def __str__(self):
+        return super().__str__()
+    
+
+class Birthday(Field):
+    
+    def __init__(self, value):
+        super().__init__(value)
+        if type(value) == date or value == None:
+            self._value = value
+        else:
+            raise ValueError('Invalid Birthday date')
+    @property
+    def value(self):
+        return super().value
+    
+    @value.setter
+    def value(self,value):
+        if type(value) == date:
+            self._value = value
+        else:
+            raise ValueError('Invalid Birthday date')
+        
+    def __str__(self):
+        return super().__str__()
+        
+
+
+class Record:
+    def __init__(self, name,):
+        self.name = Name(name)
+        self.phones = []
+        self.birthday = None
+        
+    
+    def add_birthday(self,birth_day):
+        self.birthday = Birthday(birth_day).value
+    
+    def add_phone(self,new_phone):
+        number = Phone(new_phone)
+               
+        
+        self.phones.append(number)
+        
+    
+    
+    def remove_phone(self,phone):
+        for item in self.phones:
+            if phone == item.value:
+                print(f'Remove phone Number: {phone}')
+                self.phones.remove(item)
+                return
+        
+    def edit_phone(self,old_phone,new_phone):
+        for item in self.phones:
+            
+            if item.value() == old_phone:
+                item._value = new_phone
+                print(f'Edit Contact ===> old Contact: {old_phone} ===> new Contact{new_phone}')
+                return
+        raise ValueError()
+    
+    def find_phone(self,phone):
+        for item in self.phones:
+            if item._value == phone:
+                print(f'Find {phone}')
+                return item
+        return None
+
+    def days_to_birthday(self):
+        if self.birthday != None:
+            birthday_in_year = datetime(year=datetime.now().year,month=self.birthday.month,day=self.birthday.day)
+            if datetime.now() <= birthday_in_year:
+                return birthday_in_year.date() - datetime.now().date()
+            else:
+                birthday_in_year = datetime(year=birthday_in_year.year + 1,month=birthday_in_year.month,day=birthday_in_year.day)
+                return birthday_in_year.date() - datetime.now().date()
+    
+        
+    def __str__(self):
+        phone_numbers = ', '.join([str(phone.value) for phone in self.phones])
+        return f"Name: {self.name.value}, Phones: {phone_numbers}, Birthday: {self.birthday}"
+
+
+
+class AddressBook(UserDict):
+    
+    def __init__(self):
+        super().__init__()
+        self.file_name = 'AddressBook.json'
+        self.contact_data = {'Contacts': []}
+        self.load_addressbook() 
+    
+    file_name = 'AddressBook.json'
+    contact_data = {'Contacts':[]}
+    
+    def add_record(self, record: Record):
+        print(f'Add record {record.name.value}')
+        self.data[record.name.value] = record
+        
+        self.save_contact(record)
+        
+        
+
+    
+
+    def find(self,search_string):
+        find_contacts = []
+        for key,value in self.data.items():
+            name = value.name.value
+            contacts = [str(item) for item in value.phones]
+            birthday = str(value.birthday)
+            if search_string.lower() in str(name).lower() or search_string in str(contacts)  or search_string in birthday:
+                find_contacts.append(value)  
+        return ''.join([str(item) + '\n'for item in find_contacts ]) 
+
+
+    def delete(self, name):
+        if name in self.data:
+            print(f'Delete {self.data[name]}')
+            del self.data[name]
+            self.delete_contact(name)
+      
+        
+    def __str__(self):
+       print('AddressBook')
+       return ''.join(f'{self.data[key]}\n' for key,value in self.data.items())     
+    
+    def __iter__(self):
+        return self
+    
+    
+    def iterator(self, item_number):
+        counter = 0
+        result = ''
+        for item, record in self.data.items():
+            result += f'{record}\n'
+            counter += 1
+            if counter >= item_number:
+                yield result
+                counter = 0
+                result = ''
+
+    def load_addressbook(self):
+        print(f'{GREEN}LOADING CONTACTS{RESET}')
+        with open(self.file_name,'r') as fh:
+            try:    
+                self.contact_data = json.load(fh)   
+            except json.JSONDecodeError:
+                print(json.JSONDecodeError)
+        for item in self.contact_data['Contacts']:
+            record = None
+            name = item['name']
+            phone = item['phones']
+            if item['birthday'] != 0:
+                birthday = datetime.strptime(item['birthday'],'%Y-%m-%d').date()
+            else:
+                birthday = None
+            print(f'{GREEN}Contact Loaded ====> Name: {name}, Phone: {phone}, Birthday: {birthday}{RESET}')
+            record = Record(name)
+            [record.add_phone(phones) for phones in phone]
+            record.add_birthday(birthday)
+            self.data[record.name.value] = record
+    
+    
+    
+    def save_contact(self,record):
+        print(f'{GREEN}Update Contact list {RESET}')
+        if record.name.value in [item['name'] for item in self.contact_data['Contacts']]:
+            return       
+        else:
+            self.contact_data['Contacts'].append({'name':record.name.value,
+                                                    'phones':[str(item) for item in record.phones],
+                                                    'birthday':str(record.birthday) if record.birthday != None else 0})
+        with open(self.file_name,'w') as fh:
+            json.dump(self.contact_data,fh,indent=1)
+    
+    def delete_contact(self,name):
+        print(f'{GREEN}Update Contact list {RESET}')
+        self.contact_data['Contacts'] = [contact for contact in self.contact_data['Contacts'] if contact['name'] != name]
+        with open (self.file_name,'w') as fh:
+            json.dump(self.contact_data,fh,indent=1)
+        
+        
+                   
+          
+my_address_book = AddressBook()
+
+john = Record('jowhn')
+john.add_phone('0504040400')
+john.add_birthday(date(1994,10,10))
+my_address_book.add_record(john) 
+print(my_address_book.find('Sophia'))
+
+
+nazar = Record('Nazar')
+my_address_book.add_record(nazar)
+
+my_address_book.delete('Nazar')
+
+
+
+
+
+

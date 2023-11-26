@@ -1,0 +1,40 @@
+{
+ "Contacts": [
+  {
+   "name": "Maria",
+   "phones": [
+    "0502020202",
+    "0502020500"
+   ],
+   "birthday": "1993-10-10"
+  },
+  {
+   "name": "David",
+   "phones": [
+    "0503030303"
+   ],
+   "birthday": "1990-05-05"
+  },
+  {
+   "name": "Sophia",
+   "phones": [
+    "0504040404"
+   ],
+   "birthday": "1988-12-15"
+  },
+  {
+   "name": "John",
+   "phones": [
+    "0504040400"
+   ],
+   "birthday": "1994-10-10"
+  },
+  {
+   "name": "jowhn",
+   "phones": [
+    "0504040400"
+   ],
+   "birthday": "1994-10-10"
+  }
+ ]
+}
